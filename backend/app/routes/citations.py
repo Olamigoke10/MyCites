@@ -1,10 +1,12 @@
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app.models.schemas import CitationResponse, CitationStyle
+from app.services.citation_service import CitationService
 from app.services.document_parser import DocumentParser
 
 router = APIRouter()
 document_parser = DocumentParser()
+citation_service = CitationService()
 
 
 @router.get("/ping")
@@ -32,5 +34,9 @@ async def generate_citations(
     if not extracted_text:
         warning.append("No readable text found in the uploaded document.")
 
-    # Placeholder output for citation generation in next todo.
-    return CitationResponse(references=[], annotated_text=extracted_text, warnings=warning)
+    references, annotated_text, generation_warnings = citation_service.generate(extracted_text, style)
+    return CitationResponse(
+        references=references,
+        annotated_text=annotated_text,
+        warnings=warning + generation_warnings,
+    )
